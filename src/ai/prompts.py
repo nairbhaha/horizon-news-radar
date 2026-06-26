@@ -57,7 +57,8 @@ Consider:
 - Relevance to software engineering, AI/ML, and systems research
 - Community discussion quality: insightful comments, diverse viewpoints, and debates increase value
 - Engagement signals: high upvotes/favorites with substantive discussion indicate community-validated importance
-"""
+
+{topics_guidance}"""
 
 CONTENT_ANALYSIS_USER = """Analyze the following content and provide a JSON response with:
 - score (0-10): Importance score

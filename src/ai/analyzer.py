@@ -41,7 +41,25 @@ class ContentAnalyzer:
         concurrency = getattr(config, "analysis_concurrency", 1)
         return max(concurrency, 1)
 
-    async def analyze_batch(self, items: List[ContentItem]) -> List[ContentItem]:
+    async def analyze_batch(self, items: List[ContentItem], focus_topics: str = None) -> List[ContentItem]:
+        # Build topic guidance for the AI prompt
+        if focus_topics:
+            topics_list = [t.strip() for t in focus_topics.split(",") if t.strip()]
+            if topics_list:
+                topic_items = "\n".join(f"- {t}" for t in topics_list)
+                self._topics_guidance = (
+                    "The user has specified the following priority topics:\n"
+                    f"{topic_items}\n\n"
+                    "IMPORTANT: Items that directly relate to these topics should score "
+                    "higher. Relevance to these topics is a significant factor in scoring. "
+                    "Items not related to these topics should score lower unless they are "
+                    "truly groundbreaking."
+                )
+            else:
+                self._topics_guidance = ""
+        else:
+            self._topics_guidance = ""
+
         throttle_sec = self._get_throttle_sec()
         concurrency = self._get_concurrency()
         semaphore = asyncio.Semaphore(concurrency)
@@ -139,9 +157,12 @@ class ContentAnalyzer:
             discussion_section=discussion_section
         )
 
-        # Get AI completion
+        # Get AI completion (inject topic guidance into system prompt)
+        system_prompt = CONTENT_ANALYSIS_SYSTEM.format(
+            topics_guidance=getattr(self, "_topics_guidance", "")
+        )
         response = await self.client.complete(
-            system=CONTENT_ANALYSIS_SYSTEM,
+            system=system_prompt,
             user=user_prompt,
         )
 

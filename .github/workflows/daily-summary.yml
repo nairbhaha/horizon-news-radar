@@ -49,7 +49,7 @@ jobs:
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: uv run horizon --hours ${{ github.event.inputs.hours || '48' }}
+        run: uv run horizon --hours ${{ github.event.inputs.hours || '48' }} --topics "${{ github.event.inputs.topics }}"
 
       - name: Set current date as environment variable
         run: echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV

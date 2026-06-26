@@ -60,11 +60,12 @@ class HorizonOrchestrator:
             else None
         )
 
-    async def run(self, force_hours: int = None) -> None:
+    async def run(self, force_hours: int = None, focus_topics: str = None) -> None:
         """Execute the complete workflow.
 
         Args:
             force_hours: Optional override for time window in hours
+            focus_topics: Comma-separated topics of interest
         """
         self.console.print("[bold cyan]🌅 Horizon - Starting aggregation...[/bold cyan]\n")
 
@@ -100,7 +101,7 @@ class HorizonOrchestrator:
                 )
 
             # 4. Analyze with AI
-            analyzed_items = await self._analyze_content(merged_items)
+            analyzed_items = await self._analyze_content(merged_items, focus_topics=focus_topics)
             self.console.print(f"🤖 Analyzed {len(analyzed_items)} items with AI\n")
 
             # 5. Filter by score threshold
@@ -668,11 +669,12 @@ class HorizonOrchestrator:
         await enricher.enrich_batch(items)
         self.console.print(f"   Enriched {len(items)} items\n")
 
-    async def _analyze_content(self, items: List[ContentItem]) -> List[ContentItem]:
+    async def _analyze_content(self, items: List[ContentItem], focus_topics: str = None) -> List[ContentItem]:
         """Analyze content items with AI.
 
         Args:
             items: Items to analyze
+            focus_topics: Comma-separated topics of interest
 
         Returns:
             List[ContentItem]: Analyzed items
@@ -682,7 +684,10 @@ class HorizonOrchestrator:
         ai_client = create_ai_client(self.config.ai)
         analyzer = ContentAnalyzer(ai_client)
 
-        return await analyzer.analyze_batch(items)
+        if focus_topics:
+            self.console.print(f"   Focus topics: {focus_topics}")
+
+        return await analyzer.analyze_batch(items, focus_topics=focus_topics)
 
     async def _generate_summary(
         self,
